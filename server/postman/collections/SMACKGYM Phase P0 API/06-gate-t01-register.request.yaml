@@ -1,0 +1,42 @@
+$kind: http-request
+name: Gate T01 Athlete Registration
+order: 6000
+method: POST
+url: '{{baseUrl}}/v1/auth/register'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "{{testEmail}}",
+      "password": "StrongPassword2026!",
+      "fullName": "Postman Test Athlete",
+      "is18Plus": true,
+      "birthDate": "1998-05-15T00:00:00.000Z",
+      "consentGiven": true
+    }
+scripts:
+  - type: beforeRequest
+    code: |-
+      const uniqueEmail = "postman_athlete_" + Date.now() + "@test.smackgym.co.uk";
+      pm.environment.set("testEmail", uniqueEmail);
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 201 Created", function () {
+        pm.response.to.have.status(201);
+      });
+      pm.test("User profile and tokens returned", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.user.email).to.eql(pm.environment.get("testEmail"));
+        pm.expect(json.data.user.role).to.eql("ATHLETE");
+        pm.expect(json.data.user.is18Plus).to.eql(true);
+        pm.expect(json.data.tokens.accessToken).to.be.a("string");
+        pm.expect(json.data.tokens.refreshToken).to.be.a("string");
+
+        pm.environment.set("accessToken", json.data.tokens.accessToken);
+        pm.environment.set("refreshToken", json.data.tokens.refreshToken);
+        pm.environment.set("userId", json.data.user.id);
+      });

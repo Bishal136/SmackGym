@@ -1,0 +1,28 @@
+$kind: http-request
+name: P1 Super Admin Login & Session
+order: 2000
+method: POST
+url: '{{baseUrl}}/v1/auth/login'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "admin@smackgym.co.uk",
+      "password": "AdminSecret2026!"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Super admin role confirmed and token saved", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.user.role).to.eql("SUPER_ADMIN");
+        pm.expect(json.data.tokens.accessToken).to.be.a("string");
+        pm.environment.set("adminToken", json.data.tokens.accessToken);
+      });

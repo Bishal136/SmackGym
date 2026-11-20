@@ -1,0 +1,20 @@
+$kind: http-request
+name: 'Gate T10: Query Menstrual Cycle Status from Athlete Passport'
+order: 6000
+method: GET
+url: '{{baseUrl}}/v1/cycle/status'
+headers:
+  - key: Authorization
+    value: 'Bearer {{p2AthleteToken}}'
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Cycle status shows luteal deload recommendation", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.phase).to.eql("luteal");
+        pm.expect(json.data.deloadRecommended).to.eql(true);
+      });

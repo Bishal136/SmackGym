@@ -1,0 +1,31 @@
+$kind: http-request
+name: Gate T06 Restricted Plan Generation
+order: 10000
+method: POST
+url: '{{baseUrl}}/v1/plans/generate'
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: Authorization
+    value: 'Bearer {{athleteToken}}'
+body:
+  type: json
+  content: |-
+    {
+      "targetDate": "2026-12-05"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 201 Created", function () {
+        pm.response.to.have.status(201);
+      });
+      pm.test("Plan is marked restricted and excludes locked movements", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.isRestricted).to.eql(true);
+        for (const ex of json.data.exercises) {
+          pm.expect(ex.movementPattern).to.not.eql("squat");
+          pm.expect(ex.movementPattern).to.not.eql("lunge");
+        }
+      });

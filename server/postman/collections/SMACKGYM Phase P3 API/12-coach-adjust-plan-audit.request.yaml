@@ -1,0 +1,47 @@
+$kind: http-request
+name: 'Coach Adjusts Athlete Plan with Immutable Audit Trail'
+order: 12000
+method: POST
+url: '{{baseUrl}}/v1/coach/athletes/{{p3AthleteId}}/plans/{{p3PlanId}}/adjust'
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: Authorization
+    value: Bearer {{p3CoachToken}}
+body:
+  type: json
+  content: |-
+    {
+      "rationale": "Increasing back squat working sets from 3 to 4 based on velocity threshold",
+      "proposedExercises": [
+        {
+          "exerciseId": "EX-0001",
+          "name": "Barbell Back Squat",
+          "targetSets": 4,
+          "targetReps": 5,
+          "targetWeightKg": 140,
+          "movementPattern": "SQUAT",
+          "restSeconds": 180
+        },
+        {
+          "exerciseId": "EX-0002",
+          "name": "Romanian Deadlift",
+          "targetSets": 3,
+          "targetReps": 8,
+          "targetWeightKg": 85
+        }
+      ]
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Plan adjusted and immutable audit log created", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.plan.status).to.eql("adapted");
+        pm.expect(json.data.auditLog.coachId).to.eql(pm.environment.get("p3CoachId"));
+        pm.expect(json.data.auditLog.athleteId).to.eql(pm.environment.get("p3AthleteId"));
+      });

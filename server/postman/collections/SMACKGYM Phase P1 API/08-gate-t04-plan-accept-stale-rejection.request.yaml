@@ -1,0 +1,28 @@
+$kind: http-request
+name: Gate T04 Optimistic Concurrency Rejection (409 Stale Revision)
+order: 8000
+method: POST
+url: '{{baseUrl}}/v1/plans/accept'
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: Authorization
+    value: 'Bearer {{athleteToken}}'
+body:
+  type: json
+  content: |-
+    {
+      "planId": "{{planId}}",
+      "expectedRevision": 1
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 409 Conflict", function () {
+        pm.response.to.have.status(409);
+      });
+      pm.test("Returns RFC 7807 stale_revision error", function () {
+        const json = pm.response.json();
+        pm.expect(json.code).to.eql("stale_revision");
+        pm.expect(json.detail).to.include("revision mismatch");
+      });

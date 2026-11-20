@@ -1,0 +1,35 @@
+$kind: http-request
+name: 'P3 Accredited University Student Athlete Registration (@kcl.ac.uk)'
+order: 23000
+method: POST
+url: '{{baseUrl}}/v1/auth/register'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "{{p3StudentEmail}}",
+      "password": "StudentPass2026!",
+      "fullName": "Varsity Rowing Captain",
+      "role": "ATHLETE",
+      "is18Plus": true,
+      "birthDate": "2002-09-10T00:00:00.000Z",
+      "consentGiven": true
+    }
+scripts:
+  - type: beforeRequest
+    code: |-
+      const uniqueEmail = "rowing_captain_" + Date.now() + "@kcl.ac.uk";
+      pm.environment.set("p3StudentEmail", uniqueEmail);
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 201 Created", function () {
+        pm.response.to.have.status(201);
+      });
+      pm.test("Student athlete token saved", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.environment.set("p3StudentToken", json.data.tokens.accessToken);
+      });

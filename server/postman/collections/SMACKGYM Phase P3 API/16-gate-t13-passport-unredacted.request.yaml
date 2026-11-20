@@ -1,0 +1,26 @@
+$kind: http-request
+name: 'Gate T13: Coach Passport Query Unredacted with Active Grant'
+order: 16000
+method: GET
+url: '{{baseUrl}}/v1/coach/athletes/{{p3AthleteId}}/passport'
+headers:
+  - key: Authorization
+    value: Bearer {{p3CoachToken}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Gate T13: Special Category Data unredacted with consent", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        const fastingFact = json.data.facts.find(f => f.key === "fasting_config");
+        pm.expect(fastingFact.value.redacted).to.be.undefined;
+        pm.expect(fastingFact.value.fastingType).to.eql("RAMADAN");
+        const cycleFact = json.data.facts.find(f => f.key === "menstrual_cycle_status");
+        pm.expect(cycleFact.value.redacted).to.be.undefined;
+        pm.expect(cycleFact.value.phase).to.eql("luteal");
+        pm.expect(json.data.digitalTwin.fastingRedacted).to.be.undefined;
+        pm.expect(json.data.digitalTwin.isFastingRamadan).to.eql(true);
+      });

@@ -1,0 +1,20 @@
+$kind: http-request
+name: 'Gate T14: Accredited Student Successfully Claims Seat'
+order: 24000
+method: POST
+url: '{{baseUrl}}/v1/institutions/claim-seat'
+headers:
+  - key: Authorization
+    value: Bearer {{p3StudentToken}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Gate T14: Seat claimed and seat count incremented", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.seat.status).to.eql("active");
+        pm.expect(json.data.institution.usedSeats).to.be.at.least(1);
+      });

@@ -1,0 +1,20 @@
+$kind: http-request
+name: 'Gate T11: Query Evidence Cards Filtered by Exercise ID'
+order: 12000
+method: GET
+url: '{{baseUrl}}/v1/research/cards?exerciseId=EX-0001'
+headers:
+  - key: Authorization
+    value: 'Bearer {{p2AthleteToken}}'
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Retrieved cards linked to exercise EX-0001", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.length).to.be.at.least(1);
+        pm.expect(json.data[0].exerciseIds).to.include("EX-0001");
+      });

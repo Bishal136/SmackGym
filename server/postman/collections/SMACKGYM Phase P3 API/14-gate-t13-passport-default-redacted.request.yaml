@@ -1,0 +1,29 @@
+$kind: http-request
+name: 'Gate T13: Default Coach Passport Query Strictly Redacted (GDPR Article 9)'
+order: 14000
+method: GET
+url: '{{baseUrl}}/v1/coach/athletes/{{p3AthleteId}}/passport'
+headers:
+  - key: Authorization
+    value: Bearer {{p3CoachToken}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Gate T13: Special Category Data strictly redacted without grant", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.gdprArticle9Protected).to.eql(true);
+        const fastingFact = json.data.facts.find(f => f.key === "fasting_config");
+        pm.expect(fastingFact).to.exist;
+        pm.expect(fastingFact.value.redacted).to.eql(true);
+        pm.expect(fastingFact.value.reason).to.eql("REDACTED_GDPR_ARTICLE_9_NO_GRANT");
+        const cycleFact = json.data.facts.find(f => f.key === "menstrual_cycle_status");
+        pm.expect(cycleFact).to.exist;
+        pm.expect(cycleFact.value.redacted).to.eql(true);
+        pm.expect(cycleFact.value.reason).to.eql("REDACTED_GDPR_ARTICLE_9_NO_GRANT");
+        pm.expect(json.data.digitalTwin.fastingRedacted).to.eql(true);
+        pm.expect(json.data.digitalTwin.cycleRedacted).to.eql(true);
+      });

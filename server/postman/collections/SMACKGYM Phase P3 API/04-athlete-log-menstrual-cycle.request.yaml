@@ -1,0 +1,29 @@
+$kind: http-request
+name: 'P3 Athlete Logs Menstrual Cycle (Luteal Phase)'
+order: 4000
+method: POST
+url: '{{baseUrl}}/v1/cycle/log'
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: Authorization
+    value: Bearer {{p3AthleteToken}}
+body:
+  type: json
+  content: |-
+    {
+      "cycleDay": 21,
+      "overallSymptomSeverity": 4,
+      "fatigueSeverity": 4,
+      "notes": "Luteal phase fatigue during peak training"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 or 201", function () {
+        pm.expect(pm.response.code).to.be.oneOf([200, 201]);
+      });
+      pm.test("Cycle log recorded", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+      });

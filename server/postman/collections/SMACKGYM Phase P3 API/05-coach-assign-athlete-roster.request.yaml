@@ -1,0 +1,28 @@
+$kind: http-request
+name: 'Coach Assigns Athlete to Roster'
+order: 5000
+method: POST
+url: '{{baseUrl}}/v1/coach/roster/assign'
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: Authorization
+    value: Bearer {{p3CoachToken}}
+body:
+  type: json
+  content: |-
+    {
+      "athleteId": "{{p3AthleteId}}",
+      "notes": "Varsity heavyweight squad athlete"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 201 Created", function () {
+        pm.response.to.have.status(201);
+      });
+      pm.test("Athlete assigned to coach roster", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.athleteId).to.eql(pm.environment.get("p3AthleteId"));
+      });

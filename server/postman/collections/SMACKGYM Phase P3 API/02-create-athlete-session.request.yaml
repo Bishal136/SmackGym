@@ -1,0 +1,37 @@
+$kind: http-request
+name: 'P3 Athlete Setup & Registration'
+order: 2000
+method: POST
+url: '{{baseUrl}}/v1/auth/register'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "{{p3AthleteEmail}}",
+      "password": "AthletePass2026!",
+      "fullName": "Olympic Athlete Sam",
+      "role": "ATHLETE",
+      "mode": "personal",
+      "is18Plus": true,
+      "birthDate": "2000-05-15T00:00:00.000Z",
+      "consentGiven": true
+    }
+scripts:
+  - type: beforeRequest
+    code: |-
+      const uniqueEmail = "p3_athlete_" + Date.now() + "@test.smackgym.co.uk";
+      pm.environment.set("p3AthleteEmail", uniqueEmail);
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 201 Created", function () {
+        pm.response.to.have.status(201);
+      });
+      pm.test("Athlete session token saved", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.environment.set("p3AthleteToken", json.data.tokens.accessToken);
+        pm.environment.set("p3AthleteId", json.data.user.id);
+      });

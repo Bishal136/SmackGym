@@ -1,0 +1,28 @@
+$kind: http-request
+name: Gate T08 Admin Kill Switch Deactivation
+order: 22000
+method: POST
+url: '{{baseUrl}}/v1/admin/kill-switches/GLOBAL_AI_KILL_SWITCH'
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: Authorization
+    value: 'Bearer {{adminToken}}'
+body:
+  type: json
+  content: |-
+    {
+      "enabled": false
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("GLOBAL_AI_KILL_SWITCH state restored to false", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.scope).to.eql("GLOBAL_AI_KILL_SWITCH");
+        pm.expect(json.data.enabled).to.eql(false);
+      });

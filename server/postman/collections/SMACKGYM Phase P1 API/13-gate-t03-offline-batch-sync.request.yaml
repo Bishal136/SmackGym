@@ -1,0 +1,62 @@
+$kind: http-request
+name: Gate T03 Offline Batch Set Sync (50 Sets)
+order: 13000
+method: POST
+url: '{{baseUrl}}/v1/session-events/batch'
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: Authorization
+    value: 'Bearer {{athleteToken}}'
+body:
+  type: json
+  content: '{{batchPayload}}'
+scripts:
+  - type: beforeRequest
+    code: |-
+      const athleteId = pm.environment.get("athleteId");
+      const sessionId = "sess-" + Date.now();
+      const events = [];
+
+      function genUuid() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+          const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+          return v.toString(16);
+        });
+      }
+
+      for (let i = 0; i < 50; i++) {
+        events.push({
+          eventId: genUuid(),
+          sessionId: sessionId,
+          athleteId: athleteId,
+          exerciseId: "EX-0001",
+          setData: {
+            setId: genUuid(),
+            setNumber: i + 1,
+            targetReps: 10,
+            actualReps: 10,
+            weightKg: 100,
+            rpe: 8,
+            isCompleted: true,
+            loggedAt: new Date().toISOString()
+          },
+          eventTimestamp: new Date().toISOString()
+        });
+      }
+
+      const payloadStr = JSON.stringify({ events: events });
+      pm.environment.set("batchPayload", payloadStr);
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("50 sets ingested in sub-100ms internal processing", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.totalReceived).to.eql(50);
+        pm.expect(json.data.insertedCount).to.eql(50);
+        pm.expect(json.data.duplicateCount).to.eql(0);
+        pm.expect(json.data.processingTimeMs).to.be.below(100);
+      });

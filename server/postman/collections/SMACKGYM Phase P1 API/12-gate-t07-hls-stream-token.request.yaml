@@ -1,0 +1,26 @@
+$kind: http-request
+name: Gate T07 Bunny HLS Stream Token Signing
+order: 12000
+method: GET
+url: '{{baseUrl}}/v1/content/{{exerciseId}}/stream-token'
+headers:
+  - key: Authorization
+    value: 'Bearer {{athleteToken}}'
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("HMAC signed HLS URL returned with 15-min expiry", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.token).to.be.a("string");
+        pm.expect(json.data.token.length).to.eql(64);
+        pm.expect(json.data.playbackUrl).to.include("token=");
+        pm.expect(json.data.playbackUrl).to.include("expires=");
+
+        const nowSec = Math.floor(Date.now() / 1000);
+        const ttl = json.data.expiresAt - nowSec;
+        pm.expect(ttl).to.be.within(880, 920);
+      });

@@ -1,0 +1,34 @@
+$kind: http-request
+name: 'Gate T09: Configure Ramadan Fasting Window & Hydration Shift'
+order: 2000
+method: POST
+url: '{{baseUrl}}/v1/fasting/config'
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: Authorization
+    value: 'Bearer {{p2AthleteToken}}'
+body:
+  type: json
+  content: |-
+    {
+      "isActive": true,
+      "fastingType": "RAMADAN",
+      "fajrTime": "04:30",
+      "maghribTime": "18:30"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Ramadan hydration shifted: 0ml daytime, 30% Suhoor, 70% Iftar", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.fastingType).to.eql("RAMADAN");
+        pm.expect(json.data.hydrationSchedule.daytimeTargetMl).to.eql(0);
+        pm.expect(json.data.hydrationSchedule.suhoorTargetMl).to.eql(900);
+        pm.expect(json.data.hydrationSchedule.iftarTargetMl).to.eql(2100);
+        pm.expect(json.data.adaptationReasonCode).to.eql("ADAPT_RAMADAN_HYDRATION_SHIFT");
+      });

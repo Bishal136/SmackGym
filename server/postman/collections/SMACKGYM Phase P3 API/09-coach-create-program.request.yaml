@@ -1,0 +1,38 @@
+$kind: http-request
+name: 'Coach Authors Multi-Week Training Program'
+order: 9000
+method: POST
+url: '{{baseUrl}}/v1/coach/programs'
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: Authorization
+    value: Bearer {{p3CoachToken}}
+body:
+  type: json
+  content: |-
+    {
+      "title": "Off-Season Power Periodization",
+      "description": "Comprehensive 12-week power development block",
+      "weeksCount": 12,
+      "difficulty": "advanced",
+      "weeklySchedule": [
+        {
+          "dayNumber": 1,
+          "focus": "Lower Body Strength & RFD",
+          "exerciseIds": ["EX-SQ-01", "EX-DL-02"]
+        }
+      ]
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 201 Created", function () {
+        pm.response.to.have.status(201);
+      });
+      pm.test("Program created with schedule", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.weeksCount).to.eql(12);
+        pm.environment.set("p3ProgramId", json.data._id);
+      });

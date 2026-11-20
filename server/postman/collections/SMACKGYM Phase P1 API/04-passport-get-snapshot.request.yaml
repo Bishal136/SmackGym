@@ -1,0 +1,21 @@
+$kind: http-request
+name: Performance Passport Digital Twin Snapshot
+order: 4000
+method: GET
+url: '{{baseUrl}}/v1/passport/snapshot'
+headers:
+  - key: Authorization
+    value: 'Bearer {{athleteToken}}'
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Compiled Digital Twin snapshot structure returned", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.userId).to.eql(pm.environment.get("athleteId"));
+        pm.expect(json.data.readinessScore).to.be.a("number");
+        pm.expect(json.data.availableEquipment).to.be.an("array");
+      });

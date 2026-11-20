@@ -1,0 +1,19 @@
+$kind: http-request
+name: 'Gate T13: Athlete Immediately Revokes Coach Grant'
+order: 17000
+method: DELETE
+url: '{{baseUrl}}/v1/grants/{{p3GrantId}}'
+headers:
+  - key: Authorization
+    value: Bearer {{p3AthleteToken}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Grant marked inactive", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.isActive).to.eql(false);
+      });

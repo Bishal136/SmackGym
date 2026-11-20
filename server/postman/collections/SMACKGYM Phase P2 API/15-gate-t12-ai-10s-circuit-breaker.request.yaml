@@ -1,0 +1,30 @@
+$kind: http-request
+name: 'Gate T12: Ask AI 10s Circuit Breaker Triggers Deterministic Fallback'
+order: 15000
+method: POST
+url: '{{baseUrl}}/v1/ai/ask'
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: Authorization
+    value: 'Bearer {{p2AthleteToken}}'
+body:
+  type: json
+  content: |-
+    {
+      "prompt": "Simulate deep biomechanical analysis of Romanian deadlifts",
+      "simulateDelayMs": 12000
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Strict 10s fallback circuit breaker returned deterministic engine template", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.fallbackApplied).to.eql(true);
+        pm.expect(json.data.model).to.eql("deterministic-decision-engine-fallback");
+        pm.expect(json.data.content).to.include("SMACKGYM Decision Engine");
+      });

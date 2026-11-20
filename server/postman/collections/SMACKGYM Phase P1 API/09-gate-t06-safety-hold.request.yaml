@@ -1,0 +1,32 @@
+$kind: http-request
+name: Gate T06 "Something Hurts" Medical Hold Activation
+order: 9000
+method: POST
+url: '{{baseUrl}}/v1/safety/holds'
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: Authorization
+    value: 'Bearer {{athleteToken}}'
+body:
+  type: json
+  content: |-
+    {
+      "affectedBodyPart": "knee",
+      "reasonCode": "SH_001_SHARP_PAIN",
+      "notes": "Postman E2E automated safety pain hold test"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Pain hold locks movement patterns", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.affectedBodyPart).to.eql("knee");
+        pm.expect(json.data.restrictedMovements).to.include("squat");
+        pm.expect(json.data.restrictedMovements).to.include("lunge");
+        pm.expect(json.data.isCleared).to.eql(false);
+      });

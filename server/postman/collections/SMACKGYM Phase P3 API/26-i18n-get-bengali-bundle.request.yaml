@@ -1,0 +1,18 @@
+$kind: http-request
+name: 'Regional i18n: Retrieve Bengali Language Bundle'
+order: 26000
+method: GET
+url: '{{baseUrl}}/v1/i18n/translations?lang=bn'
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Bengali localization bundle contains verified keys", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.locale).to.eql("bn");
+        pm.expect(json.translations.forbidden_underage).to.include("১৮ বছর");
+        pm.expect(json.translations.ramadan_suhoor_reminder).to.include("সেহরি");
+      });

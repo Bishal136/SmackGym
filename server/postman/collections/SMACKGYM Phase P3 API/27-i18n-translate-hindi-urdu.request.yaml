@@ -1,0 +1,27 @@
+$kind: http-request
+name: 'Regional i18n: Dynamic Key Translation (Hindi & Urdu)'
+order: 27000
+method: POST
+url: '{{baseUrl}}/v1/i18n/translate'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "key": "ramadan_suhoor_reminder",
+      "lang": "hi"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Hindi translation returned", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.lang).to.eql("hi");
+        pm.expect(json.translation).to.include("सुहूर");
+      });

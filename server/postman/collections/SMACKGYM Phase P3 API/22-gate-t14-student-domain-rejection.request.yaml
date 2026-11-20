@@ -1,0 +1,18 @@
+$kind: http-request
+name: 'Gate T14: Non-Accredited Domain Rejection (HTTP 403)'
+order: 22000
+method: POST
+url: '{{baseUrl}}/v1/institutions/claim-seat'
+headers:
+  - key: Authorization
+    value: Bearer {{p3AthleteToken}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 403 Forbidden", function () {
+        pm.response.to.have.status(403);
+      });
+      pm.test("Gate T14: RFC 7807 code is institutional_domain_mismatch", function () {
+        const json = pm.response.json();
+        pm.expect(json.code).to.eql("institutional_domain_mismatch");
+      });

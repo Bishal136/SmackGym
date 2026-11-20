@@ -1,0 +1,28 @@
+$kind: http-request
+name: 'Gate T14: Admin Provisions 500 Additional Enterprise Seats'
+order: 21000
+method: POST
+url: '{{baseUrl}}/v1/institutions/{{p3InstitutionId}}/provision-bulk'
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: Authorization
+    value: Bearer {{p3AdminToken}}
+body:
+  type: json
+  content: |-
+    {
+      "seatsToAdd": 500
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Gate T14: Total seats expanded to 1,000", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.totalSeats).to.eql(1000);
+        pm.expect(json.data.usedSeats).to.eql(0);
+      });

@@ -1,0 +1,11 @@
+# Local server ignores
+node_modules/
+dist/
+logs/
+*.log
+uploads/
+.env
+.env.*
+!.env.example
+coverage/
+.DS_Store

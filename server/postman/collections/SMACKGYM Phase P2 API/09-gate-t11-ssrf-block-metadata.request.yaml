@@ -1,0 +1,27 @@
+$kind: http-request
+name: 'Gate T11: SSRF Pre-Flight Guard Blocks Cloud Metadata 169.254.169.254'
+order: 9000
+method: POST
+url: '{{baseUrl}}/v1/research/ingest'
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: Authorization
+    value: 'Bearer {{p2AthleteToken}}'
+body:
+  type: json
+  content: |-
+    {
+      "targetUrl": "http://169.254.169.254/latest/meta-data/iam",
+      "source": "pubmed"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 400 Bad Request", function () {
+        pm.response.to.have.status(400);
+      });
+      pm.test("RFC 7807 Problem Details returns ssrf_target_blocked", function () {
+        const json = pm.response.json();
+        pm.expect(json.code).to.eql("ssrf_target_blocked");
+      });

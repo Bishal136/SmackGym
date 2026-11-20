@@ -1,0 +1,20 @@
+$kind: http-request
+name: 'Coach Retrieves Immutable Plan Adjustment Audit Trail'
+order: 13000
+method: GET
+url: '{{baseUrl}}/v1/coach/athletes/{{p3AthleteId}}/plans/{{p3PlanId}}/audit-logs'
+headers:
+  - key: Authorization
+    value: Bearer {{p3CoachToken}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Audit logs verify coach rationale and changes", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.count).to.be.at.least(1);
+        pm.expect(json.data[0].rationale).to.include("velocity threshold");
+      });

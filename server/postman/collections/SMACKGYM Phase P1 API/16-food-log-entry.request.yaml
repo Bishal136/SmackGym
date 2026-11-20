@@ -1,0 +1,35 @@
+$kind: http-request
+name: Food Log Entry Creation
+order: 16000
+method: POST
+url: '{{baseUrl}}/v1/food/entries'
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: Authorization
+    value: 'Bearer {{athleteToken}}'
+body:
+  type: json
+  content: |-
+    {
+      "mealName": "Chicken Breast with Rice and Avocado",
+      "mealType": "lunch",
+      "calories": 680,
+      "proteinGrams": 55,
+      "carbsGrams": 75,
+      "fatGrams": 18,
+      "hydrationMl": 500,
+      "loggedAt": "2026-12-01T13:00:00.000Z"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 201 Created", function () {
+        pm.response.to.have.status(201);
+      });
+      pm.test("Nutrition values persisted accurately", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.proteinGrams).to.eql(55);
+        pm.expect(json.data.calories).to.eql(680);
+      });

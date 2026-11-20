@@ -1,0 +1,37 @@
+$kind: http-request
+name: 'Setup Super Admin Session for Enterprise Management'
+order: 19000
+method: POST
+url: '{{baseUrl}}/v1/auth/register'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "{{p3AdminEmail}}",
+      "password": "AdminSuperPass2026!",
+      "fullName": "Institutional Admin Director",
+      "role": "SUPER_ADMIN",
+      "mode": "professional",
+      "is18Plus": true,
+      "birthDate": "1980-01-01T00:00:00.000Z",
+      "consentGiven": true
+    }
+scripts:
+  - type: beforeRequest
+    code: |-
+      const uniqueEmail = "admin_" + Date.now() + "@test.smackgym.co.uk";
+      pm.environment.set("p3AdminEmail", uniqueEmail);
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 201 Created", function () {
+        pm.response.to.have.status(201);
+      });
+      pm.test("Admin session token saved", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.user.role).to.eql("SUPER_ADMIN");
+        pm.environment.set("p3AdminToken", json.data.tokens.accessToken);
+      });

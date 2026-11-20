@@ -1,0 +1,12 @@
+workspace:
+  id: "b9471cad-3642-4cad-a3d2-8d485cba116b"
+
+# Each entry here maps a local resource to one or more corresponding objects in Postman Cloud
+cloudResources:
+  collections:
+    ../postman/collections/SMACKGYM Phase P0 API: 60224830-21032576-3e74-4c19-b71d-02faf9d26c50
+    ../postman/collections/SMACKGYM Phase P1 API: 60224830-2405cf2b-37d2-4524-a7f6-c72aa2c3e85b
+    ../postman/collections/SMACKGYM Phase P2 API: 60224830-b6b4daef-1e35-404c-918a-0d0ea11b614e
+    ../postman/collections/SMACKGYM Phase P3 API: 60224830-e21b1d15-fb26-41d7-b764-46f7119ca1c9
+  environments:
+    ../postman/environments/Local.environment.yaml: 60224830-0d6d9f15-caf3-4155-9307-b0d689b99c2e

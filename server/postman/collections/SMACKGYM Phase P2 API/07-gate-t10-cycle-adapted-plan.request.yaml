@@ -1,0 +1,30 @@
+$kind: http-request
+name: 'Gate T10: Generate Plan with Menstrual Luteal Deload Adaptation'
+order: 7000
+method: POST
+url: '{{baseUrl}}/v1/plans/generate'
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: Authorization
+    value: 'Bearer {{p2AthleteToken}}'
+body:
+  type: json
+  content: |-
+    {
+      "targetDate": "2026-03-21"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 201 Created", function () {
+        pm.response.to.have.status(201);
+      });
+      pm.test("Plan rationale includes ADAPT_MENSTRUAL_LUTEAL_DELOAD", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.rationaleCodes).to.include("ADAPT_MENSTRUAL_LUTEAL_DELOAD");
+        json.data.exercises.forEach(function (ex) {
+          pm.expect(ex.targetSets).to.be.at.most(2);
+        });
+      });

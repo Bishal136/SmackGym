@@ -1,0 +1,28 @@
+$kind: http-request
+name: Validation Failure Check
+order: 5000
+method: POST
+url: '{{baseUrl}}/v1/auth/register'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "invalid-email-address",
+      "password": "short",
+      "fullName": ""
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 422 Unprocessable Entity", function () {
+        pm.response.to.have.status(422);
+      });
+      pm.test("RFC 7807 validation_failed details returned", function () {
+        const json = pm.response.json();
+        pm.expect(json.code).to.eql("validation_failed");
+        pm.expect(json.invalidParams).to.be.an("array");
+        pm.expect(json.invalidParams.length).to.be.above(0);
+      });

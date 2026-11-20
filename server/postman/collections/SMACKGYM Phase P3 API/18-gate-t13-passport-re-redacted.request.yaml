@@ -1,0 +1,21 @@
+$kind: http-request
+name: 'Gate T13: Coach Passport Query Re-Redacted After Grant Revocation'
+order: 18000
+method: GET
+url: '{{baseUrl}}/v1/coach/athletes/{{p3AthleteId}}/passport'
+headers:
+  - key: Authorization
+    value: Bearer {{p3CoachToken}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Gate T13: Fasting data strictly re-redacted after revocation", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        const fastingFact = json.data.facts.find(f => f.key === "fasting_config");
+        pm.expect(fastingFact.value.redacted).to.eql(true);
+        pm.expect(fastingFact.value.reason).to.eql("REDACTED_GDPR_ARTICLE_9_NO_GRANT");
+      });

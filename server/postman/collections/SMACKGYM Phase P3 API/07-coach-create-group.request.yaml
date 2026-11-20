@@ -1,0 +1,29 @@
+$kind: http-request
+name: 'Coach Creates Training Cohort / Group'
+order: 7000
+method: POST
+url: '{{baseUrl}}/v1/coach/groups'
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: Authorization
+    value: Bearer {{p3CoachToken}}
+body:
+  type: json
+  content: |-
+    {
+      "name": "Varsity Sprint Cohort",
+      "description": "High performance squad for collegiate track & field",
+      "athleteIds": ["{{p3AthleteId}}"]
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 201 Created", function () {
+        pm.response.to.have.status(201);
+      });
+      pm.test("Group created and saved to environment", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.environment.set("p3GroupId", json.data._id);
+      });

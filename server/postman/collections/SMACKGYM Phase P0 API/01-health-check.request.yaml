@@ -1,0 +1,17 @@
+$kind: http-request
+name: Health Check
+order: 1000
+method: GET
+url: '{{baseUrl}}/health'
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Services are connected", function () {
+        const json = pm.response.json();
+        pm.expect(json.status).to.eql("ok");
+        pm.expect(json.services.mongodb).to.eql("connected");
+        pm.expect(json.services.redis).to.eql("connected");
+      });

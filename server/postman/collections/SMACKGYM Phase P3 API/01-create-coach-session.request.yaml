@@ -1,0 +1,38 @@
+$kind: http-request
+name: 'P3 Coach Setup & Registration'
+order: 1000
+method: POST
+url: '{{baseUrl}}/v1/auth/register'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "{{p3CoachEmail}}",
+      "password": "CoachPass2026!",
+      "fullName": "Head Coach Marcus",
+      "role": "COACH",
+      "mode": "professional",
+      "is18Plus": true,
+      "birthDate": "1988-03-12T00:00:00.000Z",
+      "consentGiven": true
+    }
+scripts:
+  - type: beforeRequest
+    code: |-
+      const uniqueEmail = "coach_" + Date.now() + "@test.smackgym.co.uk";
+      pm.environment.set("p3CoachEmail", uniqueEmail);
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 201 Created", function () {
+        pm.response.to.have.status(201);
+      });
+      pm.test("Coach session token saved", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.user.role).to.eql("COACH");
+        pm.environment.set("p3CoachToken", json.data.tokens.accessToken);
+        pm.environment.set("p3CoachId", json.data.user.id);
+      });

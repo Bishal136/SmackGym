@@ -1,0 +1,20 @@
+$kind: http-request
+name: 'Observability: Prometheus Metrics Exposition Endpoint'
+order: 16000
+method: GET
+url: '{{baseUrl}}/metrics'
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Content-Type is Prometheus text format", function () {
+        pm.expect(pm.response.headers.get("Content-Type")).to.include("text/plain");
+      });
+      pm.test("Metrics text contains process and HTTP counters", function () {
+        const text = pm.response.text();
+        pm.expect(text).to.include("process_resident_memory_bytes");
+        pm.expect(text).to.include("http_requests_total");
+        pm.expect(text).to.include("smackgym_system_status 1");
+      });

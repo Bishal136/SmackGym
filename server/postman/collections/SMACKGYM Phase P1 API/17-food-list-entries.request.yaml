@@ -1,0 +1,21 @@
+$kind: http-request
+name: Food Log List Query
+order: 17000
+method: GET
+url: '{{baseUrl}}/v1/food/entries'
+headers:
+  - key: Authorization
+    value: 'Bearer {{athleteToken}}'
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Logged food entries retrieved in chronological order", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data).to.be.an("array");
+        pm.expect(json.data.length).to.be.above(0);
+        pm.expect(json.data[0].mealName).to.eql("Chicken Breast with Rice and Avocado");
+      });

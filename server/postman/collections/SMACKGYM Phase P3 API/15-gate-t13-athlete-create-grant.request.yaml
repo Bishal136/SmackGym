@@ -1,0 +1,30 @@
+$kind: http-request
+name: 'Gate T13: Athlete Grants Granular Consent to Coach'
+order: 15000
+method: POST
+url: '{{baseUrl}}/v1/grants'
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: Authorization
+    value: Bearer {{p3AthleteToken}}
+body:
+  type: json
+  content: |-
+    {
+      "coachId": "{{p3CoachId}}",
+      "scopes": ["fasting_data", "cycle_data", "training_logs"],
+      "durationDays": 30
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 201 Created", function () {
+        pm.response.to.have.status(201);
+      });
+      pm.test("ScopedGrant created and active", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.isActive).to.eql(true);
+        pm.environment.set("p3GrantId", json.data._id);
+      });

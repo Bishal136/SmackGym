@@ -1,0 +1,25 @@
+$kind: http-request
+name: Stripe Billing Webhook Deduplication
+order: 19000
+method: POST
+url: '{{baseUrl}}/v1/billing/webhook'
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: stripe-signature
+    value: postman_test_signature
+body:
+  type: json
+  content: '{{stripeEventPayload}}'
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Duplicate webhook event deduplicated by Redis TTL", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.received).to.eql(true);
+        pm.expect(json.data.deduplicated).to.eql(true);
+      });

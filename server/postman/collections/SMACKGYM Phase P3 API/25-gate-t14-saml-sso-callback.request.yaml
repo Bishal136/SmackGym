@@ -1,0 +1,33 @@
+$kind: http-request
+name: 'Gate T14: Enterprise SAML 2.0 / OIDC SSO Assertion Login'
+order: 25000
+method: POST
+url: '{{baseUrl}}/v1/institutions/sso/saml'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "{{p3SsoEmail}}",
+      "fullName": "Varsity Athletics Captain",
+      "institutionDomain": "kcl.ac.uk",
+      "samlAssertionToken": "saml-token-assertion-2026"
+    }
+scripts:
+  - type: beforeRequest
+    code: |-
+      const uniqueEmail = "sso_captain_" + Date.now() + "@kcl.ac.uk";
+      pm.environment.set("p3SsoEmail", uniqueEmail);
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Gate T14: SSO tokens issued and university account linked", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.tokens.accessToken).to.be.a("string");
+        pm.expect(json.data.institution.name).to.include("King's College London");
+      });

@@ -1,0 +1,18 @@
+$kind: http-request
+name: Gate T01 Verify Revoked Token Rejected
+order: 13000
+method: GET
+url: '{{baseUrl}}/v1/auth/me'
+headers:
+  - key: Authorization
+    value: 'Bearer {{accessToken}}'
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 401 Unauthorized", function () {
+        pm.response.to.have.status(401);
+      });
+      pm.test("RFC 7807 code is token_revoked", function () {
+        const json = pm.response.json();
+        pm.expect(json.code).to.eql("token_revoked");
+      });

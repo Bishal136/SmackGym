@@ -1,0 +1,42 @@
+$kind: http-request
+name: Stripe Billing Webhook Payment Event
+order: 18000
+method: POST
+url: '{{baseUrl}}/v1/billing/webhook'
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: stripe-signature
+    value: postman_test_signature
+body:
+  type: json
+  content: '{{stripeEventPayload}}'
+scripts:
+  - type: beforeRequest
+    code: |-
+      const evtId = "evt_postman_" + Date.now();
+      const eventObj = {
+        id: evtId,
+        type: "invoice.payment_succeeded",
+        data: {
+          object: {
+            id: "in_postman_" + Date.now(),
+            customer: "cus_postman_123",
+            subscription: "sub_postman_123",
+            amount_paid: 2900,
+            currency: "gbp"
+          }
+        }
+      };
+      pm.environment.set("stripeEventPayload", JSON.stringify(eventObj));
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Webhook event processed successfully", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.received).to.eql(true);
+        pm.expect(json.data.deduplicated).to.eql(false);
+      });

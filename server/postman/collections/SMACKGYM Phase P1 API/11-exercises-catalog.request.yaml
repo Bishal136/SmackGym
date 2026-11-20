@@ -1,0 +1,19 @@
+$kind: http-request
+name: Exercise Catalogue Retrieval
+order: 11000
+method: GET
+url: '{{baseUrl}}/v1/exercises'
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Licensed exercises catalogue returned", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data).to.be.an("array");
+        pm.expect(json.data.length).to.be.above(0);
+
+        pm.environment.set("exerciseId", json.data[0]._id);
+      });

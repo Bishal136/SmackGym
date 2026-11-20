@@ -1,0 +1,26 @@
+$kind: http-request
+name: Gate T01 Logout Session
+order: 12000
+method: POST
+url: '{{baseUrl}}/v1/auth/logout'
+headers:
+  - key: Authorization
+    value: 'Bearer {{accessToken}}'
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "refreshToken": "{{newRefreshToken}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Logout success message returned", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+      });

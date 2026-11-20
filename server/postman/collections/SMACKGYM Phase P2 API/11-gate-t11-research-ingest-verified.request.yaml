@@ -1,0 +1,37 @@
+$kind: http-request
+name: 'Gate T11: Ingest Legitimate Scientific Study with Grade A Evidence'
+order: 11000
+method: POST
+url: '{{baseUrl}}/v1/research/ingest'
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: Authorization
+    value: 'Bearer {{p2AthleteToken}}'
+body:
+  type: json
+  content: |-
+    {
+      "targetUrl": "https://pubmed.ncbi.nlm.nih.gov/38291029/",
+      "source": "pubmed",
+      "exerciseIds": [
+        "EX-0001",
+        "EX-0002"
+      ],
+      "title": "Mechanical Tension and Hypertrophy in Compound Resistance Training",
+      "doi": "10.1519/JSC.0000000000004521",
+      "publishedYear": 2026
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 201 Created", function () {
+        pm.response.to.have.status(201);
+      });
+      pm.test("Card ingested with Grade A evidence and verified status", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.evidenceGrade).to.eql("GRADE_A");
+        pm.expect(json.data.isVerified).to.eql(true);
+        pm.environment.set("p2ResearchCardId", json.data._id);
+      });

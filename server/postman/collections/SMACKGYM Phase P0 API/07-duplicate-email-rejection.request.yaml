@@ -1,0 +1,28 @@
+$kind: http-request
+name: Duplicate Email Conflict Check
+order: 7000
+method: POST
+url: '{{baseUrl}}/v1/auth/register'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "{{testEmail}}",
+      "password": "StrongPassword2026!",
+      "fullName": "Duplicate Athlete",
+      "is18Plus": true,
+      "consentGiven": true
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 409 Conflict", function () {
+        pm.response.to.have.status(409);
+      });
+      pm.test("RFC 7807 code is email_already_registered", function () {
+        const json = pm.response.json();
+        pm.expect(json.code).to.eql("email_already_registered");
+      });

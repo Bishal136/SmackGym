@@ -1,0 +1,28 @@
+$kind: http-request
+name: 'Gate T12: Ask AI Athlete Coaching Advice Under Normal Latency'
+order: 14000
+method: POST
+url: '{{baseUrl}}/v1/ai/ask'
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: Authorization
+    value: 'Bearer {{p2AthleteToken}}'
+body:
+  type: json
+  content: |-
+    {
+      "prompt": "How should I structure my rest periods for hypertrophy during squats?"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("AI coaching advice returned with token accounting", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.fallbackApplied).to.eql(false);
+        pm.expect(json.data.tokensUsed).to.be.above(0);
+      });

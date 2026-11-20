@@ -1,0 +1,30 @@
+$kind: http-request
+name: Gate T02 Underage BirthDate
+order: 4000
+method: POST
+url: '{{baseUrl}}/v1/auth/register'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "minor_birth@test.smackgym.co.uk",
+      "password": "Password123!",
+      "fullName": "Underage BirthDate",
+      "is18Plus": true,
+      "birthDate": "2012-01-01T00:00:00.000Z",
+      "consentGiven": true
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 403 Forbidden", function () {
+        pm.response.to.have.status(403);
+      });
+      pm.test("RFC 7807 code is forbidden_underage", function () {
+        const json = pm.response.json();
+        pm.expect(json.code).to.eql("forbidden_underage");
+        pm.expect(json.detail).to.include("under 18");
+      });

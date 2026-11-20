@@ -1,0 +1,33 @@
+$kind: http-request
+name: Performance Passport Fact Declaration
+order: 3000
+method: POST
+url: '{{baseUrl}}/v1/passport/facts'
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: Authorization
+    value: 'Bearer {{athleteToken}}'
+body:
+  type: json
+  content: |-
+    {
+      "domain": "equipment",
+      "key": "available_gym_equipment",
+      "value": {
+        "items": ["barbell", "rack", "dumbbell", "bench", "cable"]
+      },
+      "sourceKind": "user_declared"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 201 Created", function () {
+        pm.response.to.have.status(201);
+      });
+      pm.test("Fact persisted with active status", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.domain).to.eql("equipment");
+        pm.expect(json.data.isActive).to.eql(true);
+      });

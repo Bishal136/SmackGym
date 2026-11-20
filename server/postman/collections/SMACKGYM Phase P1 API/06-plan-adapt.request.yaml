@@ -1,0 +1,31 @@
+$kind: http-request
+name: Plan Adaptation With Rationale Codes
+order: 6000
+method: POST
+url: '{{baseUrl}}/v1/plans/{{planId}}/adapt'
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: Authorization
+    value: 'Bearer {{athleteToken}}'
+body:
+  type: json
+  content: |-
+    {
+      "reasonCode": "ADAPT_EQUIPMENT_UNAVAILABLE"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test("Plan status adapted and revision incremented", function () {
+        const json = pm.response.json();
+        pm.expect(json.success).to.eql(true);
+        pm.expect(json.data.status).to.eql("adapted");
+        pm.expect(json.data.revision).to.eql(2);
+        pm.expect(json.data.rationaleCodes).to.include("ADAPT_EQUIPMENT_UNAVAILABLE");
+
+        pm.environment.set("planRevision", json.data.revision);
+      });

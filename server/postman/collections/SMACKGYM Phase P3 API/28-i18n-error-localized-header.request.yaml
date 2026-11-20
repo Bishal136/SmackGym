@@ -1,0 +1,31 @@
+$kind: http-request
+name: 'Regional i18n: Localized RFC 7807 Error via Accept-Language Header'
+order: 28000
+method: POST
+url: '{{baseUrl}}/v1/auth/register'
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: Accept-Language
+    value: bn-BD,bn;q=0.9,en;q=0.8
+body:
+  type: json
+  content: |-
+    {
+      "email": "underage_bn@test.smackgym.co.uk",
+      "password": "Pass2026!",
+      "fullName": "Bengali Minor",
+      "is18Plus": false,
+      "consentGiven": true
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 403 Forbidden", function () {
+        pm.response.to.have.status(403);
+      });
+      pm.test("RFC 7807 detail localized to Bengali", function () {
+        const json = pm.response.json();
+        pm.expect(json.code).to.eql("forbidden_underage");
+        pm.expect(json.detail).to.include("১৮ বছর");
+      });
